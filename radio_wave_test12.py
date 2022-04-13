@@ -103,19 +103,19 @@ def line_to_coords(x,y,x2,y2):
 # input your syntax line for all positional arguments in order 
 if __name__ == '__main__':    
     # create a parser object
-    parser = argparse.ArgumentParser(description = "")
+    parser = argparse.ArgumentParser(description = "path loss modelling for both FSPL and KED cases")
     # "free space path loss model" "random terrain data generator"
-    parser.add_argument("Model_Name", type = str)
-    parser.add_argument("input_file", type = str)
-    parser.add_argument("resolution", type = int)
-    parser.add_argument("rows", type = int)
-    parser.add_argument("columns", type = int)
-    parser.add_argument("max_height", type = int)
-    parser.add_argument("transmitter_x", type = int)
-    parser.add_argument("transmitter_y", type = int)
-    parser.add_argument("transmitter_h", type = int)
-    parser.add_argument("transmitter_freq", type = int)
-    parser.add_argument("output_file", type = str)
+    parser.add_argument("Model_Name", type = str, help="path loss model name")
+    parser.add_argument("input_file", type = str, help="the image file name")
+    parser.add_argument("resolution", type = int, help="row and column resolution of the image (m)")
+    parser.add_argument("rows", type = int, help="number of rows")
+    parser.add_argument("columns", type = int, help="number of columns")
+    parser.add_argument("max_height", type = int, help="max height of the receiver above terrain level (m)")
+    parser.add_argument("transmitter_x", type = int, help="transmitter location on x-axis")
+    parser.add_argument("transmitter_y", type = int, help="transmitter location on y-axis")
+    parser.add_argument("transmitter_h", type = int, help="height of transmitter above terrain level (m)")
+    parser.add_argument("transmitter_freq", type = int, help="transmitter signal frequency (Hz)")
+    parser.add_argument("output_file", type = str, help="output file")
     
     args = parser.parse_args()
     Model_Name=args.Model_Name

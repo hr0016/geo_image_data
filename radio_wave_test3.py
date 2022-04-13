@@ -4,7 +4,7 @@ import rasterio
 import numpy as np
 import matplotlib.pyplot as plt
 
-#%% a function to generate a random terrain image of fixed widthm and length, and minmum and maximum height. 
+#%% a function to generate a random terrain image of fixed numbers of rows and columns, and minmum and maximum height. 
 
 def generator(rows, columns, min_terrain_height, max_terrain_height):
     r,c=np.arange(rows), np.arange(columns)
@@ -21,15 +21,15 @@ def generator(rows, columns, min_terrain_height, max_terrain_height):
 # input your syntax line for all positional arguments in order    
 if __name__ == '__main__':    
     # create a parser object
-    parser = argparse.ArgumentParser(description = "")
+    parser = argparse.ArgumentParser(description = "terrain image generation mode")
     # "free space path loss model" "random terrain data generator"
-    parser.add_argument("Model_Name", type = str)
-    parser.add_argument("input_file", type = str)
-    parser.add_argument("resolution", type = int)
-    parser.add_argument("rows", type = int)
-    parser.add_argument("columns", type = int)
-    parser.add_argument("min_terrain_height", type = int)
-    parser.add_argument("max_terrain_height", type = int)
+    parser.add_argument("Model_Name", type = str, help="path loss model name")
+    parser.add_argument("input_file", type = str, help="the image file name")
+    parser.add_argument("resolution", type = int, help="row and column resolution of the image (m)")
+    parser.add_argument("rows", type = int, help="number of rows")
+    parser.add_argument("columns", type = int, help="number of columns")
+    parser.add_argument("min_terrain_height", type = int, help="minimum terrain height (m)")
+    parser.add_argument("max_terrain_height", type = int, help="maximum terrain height (m)")
     
     args = parser.parse_args()
     Model_Name=args.Model_Name
@@ -44,4 +44,4 @@ if __name__ == '__main__':
     input_data = input_data.read(1)
     
     terrain = generator(rows, columns, min_terrain_height, max_terrain_height)
-    plt.imshow(terrain)
+    plt.imshow(terrain, cmap='gray')
