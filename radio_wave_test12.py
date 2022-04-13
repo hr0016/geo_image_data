@@ -1,11 +1,15 @@
+#%% import necessary packages; note rasterio is required to read image from the terrain.bil file
 import argparse
 import rasterio 
 import numpy as np
 
+#%% to compute the optional receiver height reletively above terrain level with a resolution of 5m 
 def compute_receiver_h(resolution, max_height):
     receiver_h = np.arange(resolution, max_height + resolution, resolution)
     return receiver_h
 
+#%% to compute the FSPL values and return them in a 3D array, where the first two dimensions refer to the row and column
+# locations respectively, the third dimension refers to the height position 
 def compte_FSPL(input_data, resolution, receiver_h, transmitter_x, transmitter_y, transmitter_h, transmitter_freq):
     tx_terrain_h = input_data[transmitter_y, transmitter_x]
     tx_actual_h = tx_terrain_h + transmitter_h
@@ -19,11 +23,19 @@ def compte_FSPL(input_data, resolution, receiver_h, transmitter_x, transmitter_y
                 FSPL[y][x][h] = 20*(np.log10(d/1000) + np.log10(transmitter_freq/1E+6)) + 32.45
     return FSPL
 
+#%% to obtain the terrain_height_profile which is a list of heights of all the pixels lined on the link
+    # between the transmitter and receiver; note the pixels locations are obtained using the 
+    # Bresenham's line algorithm by picking only the nearest pixel along the link
+    
 def get_terrain_height_profile(input_data, resolution, receiver_x, receiver_y, transmitter_x, transmitter_y):
     link = line_to_coords(transmitter_y, transmitter_x, receiver_y, receiver_x)
     terrain_height_profile = [input_data[l] for l in link]
     return link, terrain_height_profile
 
+# %% follow up to the terrain_height_profile, only the pixels are likely to be interferences contributing to
+    # the path loss are identified, using a multi-criteria filtering algorithm; this outputs an updated 
+    # terrain_height_profile and pixel indices on the same link (sparse)
+    
 def identify_knife_edge(link, terrain_height_profile, transmitter_h, receiver_h_actual):
     link_, link_h=[], []
     dif_h = terrain_height_profile[0] - receiver_h_actual
@@ -33,7 +45,9 @@ def identify_knife_edge(link, terrain_height_profile, transmitter_h, receiver_h_
             link_.append(link[l])  
             link_h.append(terrain_height_profile[l])
     return link_, link_h
-    
+ 
+# %% once the interferneces (or knife edges) are identified, the KED path loss can be computed if the exact  
+    # transmitter and receiver locations are also given.    
 def compute_KED(input_data, resolution, max_height, transmitter_h, transmitter_freq, transmitter_x, transmitter_y, receiver_x, receiver_y, link_, link_h):
     transmitter_h_actual = input_data[transmitter_y, transmitter_x] + transmitter_h
     receiver_h_actual = input_data[receiver_y, receiver_x] + max_height
@@ -56,7 +70,8 @@ def compute_KED(input_data, resolution, max_height, transmitter_h, transmitter_f
         L+=J
     KED=FSPL+L
     return KED
-    
+
+# %% the Bresenham's line algorithm, to output a list of pixel locations nearest to pixel (x,y) and (x2,y2)   
 def line_to_coords(x,y,x2,y2):
     steep = 0
     coords = []
@@ -82,7 +97,10 @@ def line_to_coords(x,y,x2,y2):
         d = d + (2 * dy)
     coords.append((x2,y2))
     return coords   
-    
+ 
+# %% the main function, parsed using the Python argparse module, to execute the main function using 
+# the IDE's CLI, please follow "Run" -> "Configuration per file" -> tick box "command line options" and 
+# input your syntax line for all positional arguments in order 
 if __name__ == '__main__':    
     # create a parser object
     parser = argparse.ArgumentParser(description = "")
@@ -117,7 +135,7 @@ if __name__ == '__main__':
     
     receiver_h=compute_receiver_h(resolution, max_height)
     FSPL = compte_FSPL(input_data, resolution, receiver_h, transmitter_x, transmitter_y, transmitter_h, transmitter_freq)
-        
+    # note the transmitter_h argument is set to 0 because there is no mention in the document about its height
     transmitter_h = 0
     receiver_x, receiver_y = columns-1, rows-1
     receiver_h_actual = input_data[receiver_y, receiver_x]+max_height
@@ -128,4 +146,3 @@ if __name__ == '__main__':
     print("receiver height above terrain:","\n", receiver_h)
     print("FSPL model free space loss table map for any receiver location and height:","\n", FSPL)
     print("KED model diffraction loss:","\n", KED)
-    
