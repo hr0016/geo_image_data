@@ -2,6 +2,7 @@
 import argparse
 import rasterio 
 import numpy as np
+import matplotlib
 import matplotlib.pyplot as plt
 
 #%% a function to generate a random terrain image of fixed numbers of rows and columns, and minmum and maximum height. 
@@ -30,6 +31,7 @@ if __name__ == '__main__':
     parser.add_argument("columns", type = int, help="number of columns")
     parser.add_argument("min_terrain_height", type = int, help="minimum terrain height (m)")
     parser.add_argument("max_terrain_height", type = int, help="maximum terrain height (m)")
+    parser.add_argument("save_file", type = str, help="save generated filename")
     
     args = parser.parse_args()
     Model_Name=args.Model_Name
@@ -39,9 +41,12 @@ if __name__ == '__main__':
     columns = args.columns
     min_terrain_height = args.min_terrain_height
     max_terrain_height = args.max_terrain_height
+    save_file = args.save_file
    
     input_data = rasterio.open(input_file)
     input_data = input_data.read(1)
     
     terrain = generator(rows, columns, min_terrain_height, max_terrain_height)
     plt.imshow(terrain, cmap='gray')
+    # save the generated file so it can be tested with path loss models
+    matplotlib.image.imsave('{}.tiff'.format(save_file), terrain)

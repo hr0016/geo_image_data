@@ -25,8 +25,7 @@ def compte_FSPL(input_data, resolution, receiver_h, transmitter_x, transmitter_y
 
 #%% to obtain the terrain_height_profile which is a list of heights of all the pixels lined on the link
     # between the transmitter and receiver; note the pixels locations are obtained using the 
-    # Bresenham's line algorithm by picking only the nearest pixel along the link
-    
+    # Bresenham's line algorithm by picking only the nearest pixel along the link    
 def get_terrain_height_profile(input_data, resolution, receiver_x, receiver_y, transmitter_x, transmitter_y):
     link = line_to_coords(transmitter_y, transmitter_x, receiver_y, receiver_x)
     terrain_height_profile = [input_data[l] for l in link]
@@ -34,8 +33,7 @@ def get_terrain_height_profile(input_data, resolution, receiver_x, receiver_y, t
 
 # %% follow up to the terrain_height_profile, only the pixels are likely to be interferences contributing to
     # the path loss are identified, using a multi-criteria filtering algorithm; this outputs an updated 
-    # terrain_height_profile and pixel indices on the same link (sparse)
-    
+    # terrain_height_profile and pixel indices on the same link (sparse)   
 def identify_knife_edge(link, terrain_height_profile, transmitter_h, receiver_h_actual):
     link_, link_h=[], []
     dif_h = terrain_height_profile[0] - receiver_h_actual
@@ -45,7 +43,7 @@ def identify_knife_edge(link, terrain_height_profile, transmitter_h, receiver_h_
             link_.append(link[l])  
             link_h.append(terrain_height_profile[l])
     return link_, link_h
- 
+
 # %% once the interferneces (or knife edges) are identified, the KED path loss can be computed if the exact  
     # transmitter and receiver locations are also given.    
 def compute_KED(input_data, resolution, max_height, transmitter_h, transmitter_freq, transmitter_x, transmitter_y, receiver_x, receiver_y, link_, link_h):
@@ -54,20 +52,22 @@ def compute_KED(input_data, resolution, max_height, transmitter_h, transmitter_f
     d = np.sqrt(resolution**2*((receiver_x-transmitter_x)**2+(receiver_y-transmitter_y)**2)+(receiver_h_actual-transmitter_h_actual)**2)
     FSPL = 20*(np.log10(d/1000) + np.log10(transmitter_freq/1E+6)) + 32.45
     L, ind= 0, list(np.arange(len(link_)))
+    rx, ry, rh = receiver_x, receiver_y, receiver_h_actual
     while len(ind) > 1:
-        vlist=[]      
+        vlist=[] 
         for l in range(len(ind)):
             d1=np.sqrt(resolution**2*((link_[l][0]-transmitter_x)**2+(link_[l][1]-transmitter_y)**2)+(link_h[l]-transmitter_h_actual)**2)
-            d2=np.sqrt(resolution**2*((link_[l][0]-receiver_x)**2+(link_[l][1]-receiver_y)**2)+link_h[l]**2+(link_h[l]-receiver_h_actual)**2)
+            d2=np.sqrt(resolution**2*((link_[l][0]-rx)**2+(link_[l][1]-ry)**2)+link_h[l]**2+(link_h[l]-rh)**2)
             wavelength=3E+8/transmitter_freq
             vlist.append(link_h[l]*np.sqrt(2*(d1+d2)/(wavelength*d1*d2)))
-        ind=np.argsort(vlist)[::-1]+1
-        ind=list(np.arange(ind[0]))
+        ind=np.argsort(vlist)[::-1]
+        rx, ry, rh = link_[ind[0]][0], link_[ind[0]][1], link_h[ind[0]]
         if vlist[ind[0]] >= -0.7:
             J=6.9+20*np.log10(np.sqrt((vlist[ind[0]]-0.1)**2+1)+vlist[ind[0]]-0.1)
         else:
             J=0
         L+=J
+        ind=list(np.arange(ind[0])+1)
     KED=FSPL+L
     return KED
 
@@ -143,6 +143,6 @@ if __name__ == '__main__':
     link_, link_h = identify_knife_edge(link, terrain_height_profile, transmitter_h, receiver_h_actual)
     KED = compute_KED(input_data, resolution, max_height, transmitter_h, transmitter_freq, transmitter_x, transmitter_y, receiver_x, receiver_y, link_, link_h)
 
-    print("receiver height above terrain:","\n", receiver_h)
-    print("FSPL model free space loss table map for any receiver location and height:","\n", FSPL)
+    print("receiver height above terrain:","\n", receiver_h,"\n")
+    print("FSPL model free space loss table map for any receiver location and height:","\n", FSPL, "\n")
     print("KED model diffraction loss:","\n", KED)
